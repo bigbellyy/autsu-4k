@@ -1,7 +1,9 @@
 import os
 import shutil
 import zipfile
+from util.osu_parser import OSUFile
 from pathlib import Path
+
 
 script_dir = Path(__file__).resolve().parent
 data_dir = (script_dir / "../../data").resolve()
@@ -9,8 +11,14 @@ osr_dir = (data_dir / "osr").resolve()
 zip_dir = (data_dir / "zip").resolve()
 processed_dir = (data_dir / "processed").resolve()
 
+def _sanity_check():
+    if not data_dir.is_relative_to(script_dir.parent.parent):
+        raise RuntimeError("A directory's location has been modified.")
+
 #Convert .osr's to zips.
 def load_osr():
+    _sanity_check()
+    
     #Get all zip files
     zip_paths = zip_dir.rglob('*.zip')
     zips = set()
@@ -60,5 +68,34 @@ def load_osr():
 def load_dataset():
     pass
 
+def _clean():
+    #Clear zip directory
+    zip_paths = zip_dir.rglob('*.zip')
+    for path in zip_paths:
+        file_name = path.resolve()
+        os.remove(file_name)
+    
+    mp3_dir = (processed_dir / "mp3")
+    osu_dir = (processed_dir / "osu")
+    
+    #Clear osu directory
+    osu_paths = osu_dir.rglob('*.osu')
+    for path in osu_paths:
+        file_name = path.resolve()
+        os.remove(file_name)
+
+    #Clear mp3 directory
+    mp3_paths = mp3_dir.rglob('*.mp3')
+    for path in mp3_paths:
+        file_name = path.resolve()
+        os.remove(file_name)
+
+
 if __name__ == "__main__":
+    _sanity_check()
+    
+    _clean()
+    
     load_osr()
+    
+    print(str((data_dir / "osu") / "AAAA - Hoshizora no Kanransha.osu"))
