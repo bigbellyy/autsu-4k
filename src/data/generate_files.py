@@ -77,11 +77,48 @@ def _load_osz():
         
         file_id+=1
 
+def _parse_osu(path):
+    data = []
+    
+    with open(path) as f: #Hit objects format: column, nil, timing (milli), (1 = normal, 128 = long), nil,endTiming (milli)
+        found_hit_objects = False
+        for line in f:        
+            #Continue until it reaches "[HitObjects]"
+            if "[HitObjects]" in line:
+                found_hit_objects = True
+                continue
+            
+            if not found_hit_objects:
+                continue
+            
+            line_data = line.split(",")
+            column = line_data[0]
+            time = line_data[2]
+            hit_type = line_data[3]
+            end_time = line_data[5]
+            
+            #parse end_time (its with :'s...)
+            end_time_colon_index = end_time.find(":")
+            end_time = end_time[0:end_time_colon_index]
+            
+            hit_data = [column, time, hit_type, end_time]
+            
+            data.append(hit_data)
+        
+def _parse_audio(path):
+    pass
+
 def _generate_json():
     for osz_dir in processed_dir.iterdir():
-        for path in osz_dir.iterdir():
-            pass
+        if not osz_dir.is_dir():
+            continue
 
+        for path in osz_dir.iterdir():
+            if path.stem == "audio":
+                audio_data = _parse_audio(path)
+            elif path.suffix == ".osu":
+                hit_obj_data = _parse_osu(path)
+                
 def _clean():
     #Clear zip directory
     zip_paths = zip_dir.rglob('*.zip')
@@ -106,7 +143,6 @@ def load_dataset():
 
 if __name__ == "__main__":
     _sanity_check()
-    
     _clean()
     
     load_dataset()
