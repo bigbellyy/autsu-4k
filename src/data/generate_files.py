@@ -16,7 +16,7 @@ def _sanity_check():
         raise RuntimeError("A directory's location has been modified.")
 
 #Convert .osr's to zips.
-def load_osr():
+def _load_osz():
     _sanity_check()
     
     _processed_children = os.listdir(processed_dir)
@@ -77,8 +77,10 @@ def load_osr():
         
         file_id+=1
 
-def load_dataset():
-    pass
+def _generate_json():
+    for osz_dir in processed_dir.iterdir():
+        for path in osz_dir.iterdir():
+            pass
 
 def _clean():
     #Clear zip directory
@@ -94,10 +96,17 @@ def _clean():
         else:
             path.unlink()
 
+#Reads the stored json file containing the dataset, then returns it parsed.
+def get_dataset():
+    pass
+
+def load_dataset():
+    _load_osz()
+    _generate_json()
 
 if __name__ == "__main__":
     _sanity_check()
     
     _clean()
     
-    load_osr()
+    load_dataset()
