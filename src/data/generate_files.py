@@ -1,8 +1,11 @@
 import os
 import shutil
 import zipfile
+import librosa
+import soundfile as sf
+import numpy as np
+from scipy.io.wavfile import read
 from pathlib import Path
-
 
 script_dir = Path(__file__).resolve().parent
 data_dir = (script_dir / "../../data").resolve()
@@ -10,6 +13,7 @@ osz_dir = (data_dir / "osz").resolve()
 zip_dir = (data_dir / "zip").resolve()
 processed_dir = (data_dir / "processed").resolve()
 temp_dir = (data_dir / "temp").resolve()
+npz_dir = (data_dir / "npz").resolve()
 
 def _sanity_check():
     if not data_dir.is_relative_to(script_dir.parent.parent):
@@ -74,10 +78,19 @@ def _load_osz():
             if path.suffix == ".mp3":
                 new_name = (path.parent / "audio.mp3") 
                 path.rename(new_name)
+                
+        #.mp3 -> .wav
+        audio_path = (osz_dir_path / "audio.mp3").resolve()
+        output_path = (osz_dir_path / "audio.wav").resolve()
+        y, sample_rate = librosa.load(str(audio_path), sr=44100) #Fix sample rate, to make life easier
+        sf.write(str(output_path), y, sample_rate)
+        
+        #delete the previous audio file
+        audio_path.unlink()
         
         file_id+=1
 
-def _parse_osu(path):
+def _parse_osu(path: Path):
     data = []
     
     with open(path) as f: #Hit objects format: column, nil, timing (milli), (1 = normal, 128 = long), nil,endTiming (milli)
@@ -97,28 +110,50 @@ def _parse_osu(path):
             hit_type = line_data[3]
             end_time = line_data[5]
             
-            #parse end_time (its with :'s...)
+            #parse end_time (its padded with colons)
             end_time_colon_index = end_time.find(":")
             end_time = end_time[0:end_time_colon_index]
             
             hit_data = [column, time, hit_type, end_time]
             
             data.append(hit_data)
+        if not found_hit_objects:
+            raise RuntimeError("No [HitObjects] tag found." + path.stem)
+    
+    return data
         
-def _parse_audio(path):
-    pass
+def _parse_audio(path:Path):
+    rate, data = read(str(path.resolve()))
+    audio_fft = np.fft.fft(data)
+    
+    return audio_fft
 
-def _generate_json():
+def _generate_npz():
+    osz_count = len(os.listdir(processed_dir))
+    processed_count = 0
     for osz_dir in processed_dir.iterdir():
         if not osz_dir.is_dir():
             continue
-
+        
+        file_id = osz_dir.stem
+        
+        audio_data = None
+        hit_objs = []
+        
         for path in osz_dir.iterdir():
             if path.stem == "audio":
                 audio_data = _parse_audio(path)
             elif path.suffix == ".osu":
                 hit_obj_data = _parse_osu(path)
+                hit_objs.append(hit_obj_data)
+            
+        #Save to file
+        file_name = str(npz_dir / file_id) + ".npz"
+        with open(file_name, "wb") as f:
+            np.savez_compressed(f, fft=audio_data, hit_obj=np.asarray(hit_objs, dtype="object")) #compress it
                 
+        processed_count+=1
+        print(str(processed_count)+"/"+str(osz_count) + " completed.")
 def _clean():
     #Clear zip directory
     zip_paths = zip_dir.rglob('*.zip')
@@ -132,17 +167,20 @@ def _clean():
             shutil.rmtree(path)
         else:
             path.unlink()
+    
+    #Clear npy
+    for path in npz_dir.iterdir():
+        if path.is_dir():
+            shutil.rmtree(path)
+        else:
+            path.unlink()
 
 #Reads the stored json file containing the dataset, then returns it parsed.
 def get_dataset():
     pass
 
 def load_dataset():
-    _load_osz()
-    _generate_json()
-
-if __name__ == "__main__":
     _sanity_check()
     _clean()
-    
-    load_dataset()
+    _load_osz()
+    _generate_npz()
