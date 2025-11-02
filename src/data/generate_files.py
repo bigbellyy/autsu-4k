@@ -106,6 +106,10 @@ def _parse_osu(path: Path):
             
             line_data = line.split(",")
             column = line_data[0]
+            
+            if int(column) > 448:
+                raise RuntimeError("Only 4k songs are allowed for now.")
+            
             time = line_data[2]
             hit_type = line_data[3]
             end_time = line_data[5]
