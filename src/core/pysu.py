@@ -1,6 +1,7 @@
 import sys, pygame
 pygame.init()
 
+#Pygame renderer
 class Pysu:
     def __init__(self, hit_objects, pred, lane_width = 100, hit_height = 25):
         size = width, height = 1000, 1000

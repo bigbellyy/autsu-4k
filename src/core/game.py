@@ -4,6 +4,7 @@ import math
 from data.npz import Npz
 from core.pysu import Pysu
 
+#visualizes osz files.
 class Game:
     def __init__(self, osu_id, osu_type, pred):
         if osu_type == "pysu":
