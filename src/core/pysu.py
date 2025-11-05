@@ -4,7 +4,7 @@ pygame.init()
 #Pygame renderer
 class Pysu:
     def __init__(self, hit_objects, pred, lane_width = 100, hit_height = 25):
-        size = width, height = 1000, 1000
+        size = (1000, 1000)
         self.screen = pygame.display.set_mode(size)
         self.hit_objects = hit_objects
         self.pred = pred
@@ -27,11 +27,12 @@ class Pysu:
             pass
             
         #debug, draw the notes
+        debug_offset = 250
         for hit_object in self.hit_objects:
-            cur_ms = self.cur_ms
+            cur_ms = self.cur_ms + debug_offset
                 
             lane = hit_object[0]
-            rect_obj = self.create_rect(self.lane_width * lane, hit_object[1] - cur_ms, 100, self.hit_height)
+            rect_obj = self.create_rect(self.lane_width * lane, cur_ms - hit_object[1], 100, self.hit_height)
             pygame.draw.rect(screen, (255, 255, 255), rect_obj)
                 
 

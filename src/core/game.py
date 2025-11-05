@@ -1,12 +1,17 @@
 import time
 import math
 
+from playsound import playsound
+import pygame
 from data.npz import Npz
 from core.pysu import Pysu
+
+from pathlib import Path
 
 #visualizes osz files.
 class Game:
     def __init__(self, osu_id, osu_type, pred):
+        self.osu_id = osu_id
         if osu_type == "pysu":
             self.npz_data = Npz(osu_id)
             self.cur_ms = 0
@@ -15,8 +20,22 @@ class Game:
             self.hit_objects = self.generate_hit_objects()
             self.renderer = Pysu(self.hit_objects, pred)
 
+            self.play_song()
+
             while True:
                 self.update_pysu()
+
+    def play_song(self):
+        script_dir = Path(__file__).parent.resolve()
+        data_dir = (script_dir / "../../data").resolve()
+        processed_dir = (data_dir / "processed").resolve()
+        
+        song_dir = (processed_dir / self.osu_id).resolve()
+        audio = (song_dir / "audio.wav").resolve()
+        
+        pygame.mixer.init()
+        pygame.mixer.music.load(str(audio))
+        pygame.mixer.music.play()
     
     def generate_hit_objects(self):
         hit_objects = []

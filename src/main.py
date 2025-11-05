@@ -12,10 +12,12 @@ def main():
         load_dataset()
 
     if run_type == "pysu":
-        osz_id = input("Enter osz file id. Append -p for the predicted version.")
-        pred = False
-        if "-p" in osz_id:
+        osz_id = input("Enter osz file id.")
+        pred = input("Split screen prediction? (y/n)")
+        if pred == "y":
             pred = True
+        else:
+            pred = False
         
         game = Game(osz_id, "pysu", pred)
     elif run_type == "test":

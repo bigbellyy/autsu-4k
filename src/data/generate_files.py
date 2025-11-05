@@ -93,7 +93,7 @@ def _load_osz():
 def _parse_osu(path: Path):
     data = []
     
-    with open(path) as f: #Hit objects format: column, nil, timing (milli), (1 = normal, 128 = long), nil,endTiming (milli)
+    with open(path, encoding="utf-8") as f: #Hit objects format: column, nil, timing (milli), (1 = normal, 128 = long), nil,endTiming (milli)
         found_hit_objects = False
         for line in f:        
             #Continue until it reaches "[HitObjects]"
@@ -108,7 +108,8 @@ def _parse_osu(path: Path):
             column = line_data[0]
             
             if int(column) > 448:
-                raise RuntimeError("Only 4k songs are allowed for now.")
+                return 1
+                # raise RuntimeError("Only 4k songs are allowed for now.")
             
             time = line_data[2]
             hit_type = line_data[3]
@@ -122,7 +123,7 @@ def _parse_osu(path: Path):
             
             data.append(hit_data)
         if not found_hit_objects:
-            raise RuntimeError("No [HitObjects] tag found." + path.stem)
+            return 2
     
     return data
         
@@ -149,6 +150,12 @@ def _generate_npz():
                 audio_data = _parse_audio(path)
             elif path.suffix == ".osu":
                 hit_obj_data = _parse_osu(path)
+                if hit_obj_data == 1: #not 4k
+                    print("Beatmap is not 4k. Skipping beatmap: " + path.stem)
+                    continue
+                elif hit_obj_data == 2: #no [HitObjects] tag found
+                    print("No [HitObjects] tag found. Skipping beatmap: " + path.stem)
+                    continue
                 hit_objs.append(hit_obj_data)
             
         #Save to file
