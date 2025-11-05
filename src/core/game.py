@@ -5,6 +5,7 @@ from playsound import playsound
 import pygame
 from data.npz import Npz
 from core.pysu import Pysu
+from core.termisu import Termisu
 
 from pathlib import Path
 
@@ -12,18 +13,20 @@ from pathlib import Path
 class Game:
     def __init__(self, osu_id, osu_type, pred):
         self.osu_id = osu_id
+        self.npz_data = Npz(osu_id) #load npz
+        self.cur_ms = 0
+        self.starting_ms = int(time.time() * 1000)
+        self.hit_objects = self.generate_hit_objects()
+        
         if osu_type == "pysu":
-            self.npz_data = Npz(osu_id)
-            self.cur_ms = 0
-            self.starting_ms = int(time.time() * 1000)
-            
-            self.hit_objects = self.generate_hit_objects()
             self.renderer = Pysu(self.hit_objects, pred)
+        elif osu_type == "termisu":
+            self.renderer = Termisu(self.hit_objects, pred)
+            
+        self.play_song()            
 
-            self.play_song()
-
-            while True:
-                self.update_pysu()
+        while True:
+            self.update() #blocking, run last
 
     def play_song(self):
         script_dir = Path(__file__).parent.resolve()
@@ -33,6 +36,7 @@ class Game:
         song_dir = (processed_dir / self.osu_id).resolve()
         audio = (song_dir / "audio.wav").resolve()
         
+        #play audio, cant stop it.
         pygame.mixer.init()
         pygame.mixer.music.load(str(audio))
         pygame.mixer.music.play()
@@ -62,7 +66,7 @@ class Game:
         
         return hit_objects
     
-    def update_pysu(self):
-        self.cur_ms = int(time.time() * 1000) - self.starting_ms
-        self.renderer.render()
-        self.renderer.update_ms(self.cur_ms)
+    def update(self):
+        self.cur_ms = int(time.time() * 1000) - self.starting_ms #update cur time
+        self.renderer.render() #update ui
+        self.renderer.update_ms(self.cur_ms) #update time 
