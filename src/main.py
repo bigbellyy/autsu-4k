@@ -1,6 +1,7 @@
 import os
 from data.generate_files import load_dataset
 from core.game import Game
+from ml.train import get_model
 
 #ask render type, ask what to play, ask if 
 def main():    
@@ -25,7 +26,9 @@ def main():
     elif run_type == "test":
         pass
     elif run_type == "train":
-        pass
+        model_type = input("What model (CNN, NN, or Linear)?")
+        
+        model = get_model(model_type)
 
 if __name__ == "__main__":
     main()

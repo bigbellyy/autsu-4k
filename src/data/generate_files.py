@@ -128,7 +128,7 @@ def _parse_osu(path: Path):
     return data
         
 def _parse_audio(path:Path):
-    rate, data = read(str(path.resolve()))
+    _, data = read(str(path.resolve()))
     audio_fft = np.fft.fft(data)
     
     return audio_fft

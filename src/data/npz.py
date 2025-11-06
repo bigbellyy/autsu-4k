@@ -5,6 +5,13 @@ script_dir = Path(__file__).resolve().parent
 data_dir = (script_dir / "../../data").resolve()
 npz_dir = (data_dir / "npz").resolve()
 
+def get_npzs():
+    npzs = []
+    for path in npz_dir.iterdir():
+        npz = Npz(path.stem)
+        npzs.append(npz)
+    return npzs
+
 #Helper class, loads, parses npzs
 class Npz:
     def __init__(self, file_name: str):
