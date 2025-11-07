@@ -3,18 +3,24 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import data.npz as npz
+import core.constants as constants
 
 import math
+
+device = torch.device("cpu")
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+        
 
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv1d(1, 1, 5)
-        self.pool = nn.MaxPool1d(2, 2)
-        self.conv2 = nn.Conv1d(1, 1, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.conv1 = nn.Conv2d(1, 1, 5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(1, 1, 5)
+        self.fc1 = nn.Linear(286, 120)
         self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
+        self.fc3 = nn.Linear(84, 2)
         
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -34,33 +40,42 @@ class LinearRegression():
         pass
 
 def train_cnn(npzs):
-    sample_rate = 44100 #probably wont change
-    splice_ms = 25 #partition phyisical time size
-    partition_size = sample_rate/splice_ms
+    hop_len = constants.HOP_LEN
+    sample_rate = constants.SAMPLE_RATE
+    hop_ms = hop_len/sample_rate
+    hop_count_base = 8 #how many hops will be in each parititon (mostly for labels)
+    hop_count_input = 100 #how many hops will be used for the model input
+    splice_ms = hop_count_base * hop_ms * 1000
+    
+    #   partition song  #
+    #each partition gets hop_count_input data
+    #active partition gets changed via hop_count_base
+    #there will be a lot of overlap
     
     model = CNN()
+    model = model.to(device)
     loss_function = nn.BCELoss()
     
     for npz_data in npzs:
-        #------ get audio data  ------#
-        i = 0
-        
-        partitions = [] #2d array [[partition], [partition], ...]
-        temp_partition = []
-        
-        #create audio partitions for training
-        for n in npz_data.fft:
-            if (i % partition_size == 0):
-                partitions.append(temp_partition)
-                temp_partition.clear()
-            temp_partition.append(n)
-            i+=1
-        temp_partition.clear()
+        #------ get audio data  ------#        
 
+        #create audio partitions for training
+        spectogram = npz_data.spectogram #[freq, hop]
+        spectogram_T = spectogram.T #[hop, freq]
+        
+        partitions = [] #3d array
+
+        hop_count = len(spectogram_T)
+        
+        for hop_index in range(0, hop_count - (hop_count_input + 1), hop_count_base):
+            partition = spectogram_T[hop_index:(hop_index + hop_count_input), :]
+            partitions.append(partition)
+        partitions = np.array(partitions)
+                
         #------ train on each song  ------#
         for song in npz_data.hit_objs:
             #------ get labeled data  ------#
-            labels = np.zeros(len(partitions))
+            labels = np.zeros((len(partitions), 2), dtype=np.float32) #one hot
                         
             #for each hit object, mark the partition it is on.
             for hit_obj in song:
@@ -68,24 +83,25 @@ def train_cnn(npzs):
                 ms = float(hit_obj[1])
                 
                 partition_i = math.floor(ms/splice_ms)
-                labels[partition_i] = 1
+                labels[partition_i][1] = 1 #(0, 1) = yes, there is a note here
             
             labels = torch.from_numpy(labels)
+            labels = labels.to(device)
             
             #------ get input  ------#
-            inputs = []
-            for i in range(0, len(partitions)):
-                input_data = partitions[i]
-                inputs.append(input_data)
-            inputs = np.array(inputs, dtype=np.float32)
-            inputs = torch.from_numpy(inputs)
             
-            outputs = model(inputs)
+            #input = partition (debug)
+            
+            # for inputs in partitions:
+            x = torch.tensor(partitions) #tensor: (batch, width, height)
+            x = x.unsqueeze(1) #add channels dimension, tensor: (batch, channels, width, height)
+            x = x.to(device)
+            outputs = model(x)
             loss = loss_function(outputs, labels)
-            
-
+                       
 def get_model(model_type):
     npzs = npz.get_npzs()
+    
     if model_type == "CNN":
         train_cnn(npzs)
         

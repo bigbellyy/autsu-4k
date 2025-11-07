@@ -4,6 +4,7 @@ import zipfile
 import librosa
 import soundfile as sf
 import numpy as np
+import core.constants as constants
 from scipy.io.wavfile import read
 from pathlib import Path
 
@@ -82,9 +83,9 @@ def _load_osz():
         #.mp3 -> .wav
         audio_path = (osz_dir_path / "audio.mp3").resolve()
         output_path = (osz_dir_path / "audio.wav").resolve()
-        y, sample_rate = librosa.load(str(audio_path), sr=44100) #Fix sample rate, to make life easier
+        y, sample_rate = librosa.load(str(audio_path), sr=constants.SAMPLE_RATE) #Fix sample rate, to make life easier
         sf.write(str(output_path), y, sample_rate)
-        
+                
         #delete the previous audio file
         audio_path.unlink()
         
@@ -128,10 +129,14 @@ def _parse_osu(path: Path):
     return data
         
 def _parse_audio(path:Path):
-    _, data = read(str(path.resolve()))
-    audio_fft = np.fft.fft(data)
+    # _, data = read(str(path.resolve()))
+    # audio_fft = np.fft.fft(data)
     
-    return audio_fft
+    data, sr = librosa.load(str(path.resolve()), sr=constants.SAMPLE_RATE)
+    mel_spectogram = librosa.feature.melspectrogram(y=data, sr=sr, n_fft=constants.N_FFT, hop_length=constants.HOP_LEN, n_mels=constants.N_MELS)
+    mel_spectogram = librosa.power_to_db(mel_spectogram)
+
+    return mel_spectogram
 
 def _generate_npz():
     osz_count = len(os.listdir(processed_dir))
@@ -161,7 +166,7 @@ def _generate_npz():
         #Save to file
         file_name = str(npz_dir / file_id) + ".npz"
         with open(file_name, "wb") as f:
-            np.savez_compressed(f, fft=audio_data, hit_obj=np.asarray(hit_objs, dtype="object")) #compress it
+            np.savez(f, spectogram=audio_data, hit_obj=np.asarray(hit_objs, dtype="object")) #np.savez_compressed litreally loses data on load
                 
         processed_count+=1
         print(str(processed_count)+"/"+str(osz_count) + " completed.")

@@ -24,6 +24,6 @@ class Npz:
         #hit_obj[0][0] 0th song's first hit object
         self.data = np.load(file_path, allow_pickle=True)
         self.hit_objs = self.data["hit_obj"]
-        self.fft = self.data["fft"]
+        self.spectogram = self.data["spectogram"]
         
         pass
