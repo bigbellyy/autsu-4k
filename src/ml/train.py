@@ -1,7 +1,10 @@
 import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
+
 import data.npz as npz
 import core.constants as constants
 
@@ -9,8 +12,7 @@ import math
 
 device = torch.device("cpu")
 if torch.cuda.is_available():
-    device = torch.device("cuda:0")
-        
+    device = torch.device("cuda:0")        
 
 class CNN(nn.Module):
     def __init__(self):
@@ -21,6 +23,7 @@ class CNN(nn.Module):
         self.fc1 = nn.Linear(286, 120)
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 2)
+        self.output_layer = nn.Sigmoid()
         
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -29,6 +32,7 @@ class CNN(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
+        x = self.output_layer(x)
         return x
     
 class NN(nn.Module):
@@ -52,9 +56,16 @@ def train_cnn(npzs):
     #active partition gets changed via hop_count_base
     #there will be a lot of overlap
     
+    #initialize pytorch
     model = CNN()
     model = model.to(device)
     loss_function = nn.BCELoss()
+    
+    #hyperparameters
+    learning_rate = .1
+    momentum = .9
+    
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
     
     for npz_data in npzs:
         #------ get audio data  ------#        
@@ -96,8 +107,21 @@ def train_cnn(npzs):
             x = torch.tensor(partitions) #tensor: (batch, width, height)
             x = x.unsqueeze(1) #add channels dimension, tensor: (batch, channels, width, height)
             x = x.to(device)
-            outputs = model(x)
-            loss = loss_function(outputs, labels)
+            
+            #-----  train model -----#
+            
+            epoch_count = 100
+            for epoch in range(0, epoch_count):
+                optimizer.zero_grad()
+                
+                outputs = model(x)
+                loss = loss_function(outputs, labels)
+                loss.backward()
+                optimizer.step()
+                
+                print(loss.item())
+                
+            print("next song.")
                        
 def get_model(model_type):
     npzs = npz.get_npzs()
