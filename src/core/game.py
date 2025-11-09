@@ -11,12 +11,12 @@ from pathlib import Path
 
 #visualizes osz files.
 class Game:
-    def __init__(self, osu_id, osu_type, pred):
+    def __init__(self, osu_id, osu_type, pred, hit_objects):
         self.osu_id = osu_id
         self.npz_data = Npz(osu_id) #load npz
         self.cur_ms = 0
         self.starting_ms = int(time.time() * 1000)
-        self.hit_objects = self.generate_hit_objects()
+        self.hit_objects = hit_objects or self.generate_hit_objects()
         
         if osu_type == "pysu":
             self.renderer = Pysu(self.hit_objects, pred)

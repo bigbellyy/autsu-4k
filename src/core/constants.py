@@ -1,5 +1,5 @@
 #----   audio analysis   ----#
-HOP_LEN = 128
-N_FFT = 512
+HOP_LEN = 512
+N_FFT = 2048 #512
 SAMPLE_RATE = 44100
-N_MELS = 64
+N_MELS = 128

@@ -2,6 +2,7 @@ import os
 from data.generate_files import load_dataset
 from core.game import Game
 from ml.train import get_model
+from ml.test import test_model
 
 #ask render type, ask what to play, ask if 
 def main():    
@@ -24,7 +25,10 @@ def main():
         else:
             game = Game(osz_id, "termisu", pred)
     elif run_type == "test":
-        pass
+        model_type = input("What model (CNN, NN, or Linear)?")
+        model_name = input("Input model name: ")
+        
+        test_model(model_type, model_name)
     elif run_type == "train":
         model_type = input("What model (CNN, NN, or Linear)?")
         

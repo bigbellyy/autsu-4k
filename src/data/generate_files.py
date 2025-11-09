@@ -134,7 +134,7 @@ def _parse_audio(path:Path):
     
     data, sr = librosa.load(str(path.resolve()), sr=constants.SAMPLE_RATE)
     mel_spectogram = librosa.feature.melspectrogram(y=data, sr=sr, n_fft=constants.N_FFT, hop_length=constants.HOP_LEN, n_mels=constants.N_MELS)
-    mel_spectogram = librosa.power_to_db(mel_spectogram)
+    mel_spectogram = librosa.power_to_db(mel_spectogram, ref=np.max)
 
     return mel_spectogram
 
