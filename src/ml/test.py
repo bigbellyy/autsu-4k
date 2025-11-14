@@ -23,26 +23,20 @@ if torch.cuda.is_available():
 def get_hit_objects(outputs, splice_ms):
     raw_hit_objects = []
     
-    partition_i = 0
-    for tensor in outputs:
-        max_val = tensor.max()
-        max_val = torch.sigmoid(max_val)
-        max_val = max_val > .5 and 1 or 0
+    for i, tensor in enumerate(outputs):
+        probs = torch.sigmoid(tensor)
+        threshold = .75
+        for lane, v in enumerate(probs):
+            if v > threshold:
+                #add hit object
+                hit_object_ms = int(i * splice_ms)
+                raw_hit_objects.append([lane, hit_object_ms])
         
-        if max_val == 1:            
-            #add hit object
-            hit_object_ms = int(partition_i * splice_ms)
-            lane = random.randint(0, 3) * 128 #debug
-            raw_hit_objects.append([lane, hit_object_ms])
-        else:
-            max_val = 0
-        
-        partition_i+=1
-
     #parse hit objects for Game        
     hit_objects = []
     for hit_object in raw_hit_objects:
-        lane = math.floor(float(hit_object[0]) * float(4/512)) #4k for now.
+        # lane = math.floor(float(hit_object[0]) * float(4/512)) #4k for now.
+        lane = hit_object[0]
         start_time = int(hit_object[1])
             
         hit_object_data = [lane, start_time]

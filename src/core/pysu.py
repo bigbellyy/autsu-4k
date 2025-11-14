@@ -27,7 +27,7 @@ class Pysu:
             pass
             
         #debug, draw the notes
-        debug_offset = 250
+        debug_offset = 1000 #250
         for hit_object in self.hit_objects:
             cur_ms = self.cur_ms + debug_offset
                 
