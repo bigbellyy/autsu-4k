@@ -20,6 +20,7 @@ For each .osu file and it's associated .mp3 audio file:
 - The predicted values are compared to ground truth, and backpropagation is performed to improve the model.
 
 ##Video Demo
-https://github.com/user-attachments/assets/660af1bd-7b7b-4cd5-b83c-1356b6c44a22
+
+[![Watch Demo](https://github.com/user-attachments/assets/660af1bd-7b7b-4cd5-b83c-1356b6c44a22)](https://github.com/user-attachments/assets/660af1bd-7b7b-4cd5-b83c-1356b6c44a22)
 
 Song: aaaa - [Bokutachi no Tabi to Epilogue / Our Journey and Epilogue]([url](https://open.spotify.com/track/6oF2pYwYHhJKw4ZtAi3LPA))
