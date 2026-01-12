@@ -18,3 +18,8 @@ For each .osu file and it's associated .mp3 audio file:
 - Ground truth is taken from the .osu file at the given partition's time (The .osu file contains numerous hit objects with a time attribute)
 - The CNN is then fed the partition(s) and will attempt to predict if a partition should contain a note or not (Will change in the future)
 - The predicted values are compared to ground truth, and backpropagation is performed to improve the model.
+
+##Video Demo
+https://github.com/user-attachments/assets/660af1bd-7b7b-4cd5-b83c-1356b6c44a22
+
+Song: aaaa - [Bokutachi no Tabi to Epilogue / Our Journey and Epilogue]([url](https://open.spotify.com/track/6oF2pYwYHhJKw4ZtAi3LPA))
