@@ -1,4 +1,4 @@
-##Audio Machine Learning project using CNNs
+## Audio Machine Learning project using CNNs
 
 This machine learning project attempts to generate a rhythm game beatmap from a single audio file.
 
@@ -19,7 +19,7 @@ For each .osu file and it's associated .mp3 audio file:
 - The CNN is then fed the partition(s) and will attempt to predict if a partition should contain a note or not (Will change in the future)
 - The predicted values are compared to ground truth, and backpropagation is performed to improve the model.
 
-##Video Demo
+## Video Demo
 
 [![Watch Demo](https://github.com/user-attachments/assets/660af1bd-7b7b-4cd5-b83c-1356b6c44a22)](https://github.com/user-attachments/assets/660af1bd-7b7b-4cd5-b83c-1356b6c44a22)
 
